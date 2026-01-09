@@ -1,0 +1,16 @@
+/* style.css */
+body {
+    font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
+    background-color: #f9fafb; /* Tailwind gray-50 색상 */
+    margin: 0;
+    padding: 0;
+}
+
+/* 로딩 중일 때 깜빡임 방지 */
+#root:empty::before {
+    content: '생성기 로딩 중...';
+    display: block;
+    text-align: center;
+    padding: 50px;
+    color: #666;
+}

@@ -1,21 +1,413 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-
-    <link rel="stylesheet" href="./style.css">
-
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>워드프레스 지원금 테마 생성기</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .form-section {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .form-section h2 {
+            color: #667eea;
+            font-size: 24px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .tab-inputs {
+            display: grid;
+            gap: 15px;
+        }
+        
+        .tab-input-row {
+            display: grid;
+            grid-template-columns: 2fr 3fr auto;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .keyword-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .required {
+            color: #e74c3c;
+        }
+        
+        .help-text {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .radio-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .generate-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .generate-btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .generate-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .alert {
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .alert-error {
+            background: #fee;
+            border-left: 4px solid #e74c3c;
+            color: #c0392b;
+        }
+        
+        .alert-success {
+            background: #e8f5e9;
+            border-left: 4px solid #4caf50;
+            color: #2e7d32;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .download-area {
+            display: none;
+            background: #e8f5e9;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .download-area.active {
+            display: block;
+        }
+        
+        .download-btn {
+            display: inline-block;
+            padding: 15px 40px;
+            background: #4caf50;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 16px;
+            margin-top: 15px;
+        }
+        
+        footer {
+            background: #2c3e50;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+        }
+        
+        .info-box h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+        }
+        
+        @media (max-width: 768px) {
+            .tab-input-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 28px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+    </style>
 </head>
 <body>
-    <div id="root"></div>
-    <script type="text/babel" src="./app.js"></script>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 워드프레스 지원금 테마 생성기</h1>
+            <p>AI 기반 워드프레스 테마를 1분 만에 생성하세요</p>
+        </div>
+        
+        <div class="content">
+            <div id="alertContainer"></div>
+            
+            <div class="info-box">
+                <h3>📌 사용 방법</h3>
+                <p>1. 아래 정보를 입력하세요<br>
+                2. "테마 생성하기" 버튼을 클릭하세요<br>
+                3. ZIP 파일을 다운로드하여 워드프레스에 업로드하세요</p>
+            </div>
+            
+            <!-- 기본 설정 -->
+            <div class="form-section">
+                <h2>⚙️ 기본 설정</h2>
+                
+                <div class="form-group">
+                    <label>테마 이름 <span class="required">*</span></label>
+                    <input type="text" id="themeName" placeholder="예: 지원금 테마" required>
+                    <div class="help-text">워드프레스에서 표시될 테마 이름</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>테마 슬러그 <span class="required">*</span></label>
+                    <input type="text" id="themeSlug" placeholder="예: support-theme" required>
+                    <div class="help-text">영문, 숫자, 하이픈만 사용 (폴더명으로 사용됨)</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>사이트 제목</label>
+                    <input type="text" id="siteTitle" placeholder="예: 지원금 스킨">
+                </div>
+                
+                <div class="form-group">
+                    <label>메인 URL</label>
+                    <input type="url" id="mainUrl" placeholder="https://example.com">
+                </div>
+            </div>
+            
+            <!-- 탭 메뉴 설정 -->
+            <div class="form-section">
+                <h2>📋 탭 메뉴 설정</h2>
+                <div class="tab-inputs">
+                    <div class="tab-input-row">
+                        <input type="text" id="tab1Name" placeholder="탭 1 이름">
+                        <input type="url" id="tab1Url" placeholder="탭 1 URL">
+                        <div class="radio-group">
+                            <input type="radio" name="activeTab" id="tab1Active" value="1" checked>
+                            <label for="tab1Active">Active</label>
+                        </div>
+                    </div>
+                    <div class="tab-input-row">
+                        <input type="text" id="tab2Name" placeholder="탭 2 이름">
+                        <input type="url" id="tab2Url" placeholder="탭 2 URL">
+                        <div class="radio-group">
+                            <input type="radio" name="activeTab" id="tab2Active" value="2">
+                            <label for="tab2Active">Active</label>
+                        </div>
+                    </div>
+                    <div class="tab-input-row">
+                        <input type="text" id="tab3Name" placeholder="탭 3 이름">
+                        <input type="url" id="tab3Url" placeholder="탭 3 URL">
+                        <div class="radio-group">
+                            <input type="radio" name="activeTab" id="tab3Active" value="3">
+                            <label for="tab3Active">Active</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- 키워드 입력 -->
+            <div class="form-section">
+                <h2>📝 키워드 입력 (최대 9개) <span class="required">*</span></h2>
+                <div class="keyword-grid" id="keywordGrid">
+                    <input type="text" class="keyword-input" placeholder="키워드 1">
+                    <input type="text" class="keyword-input" placeholder="키워드 2">
+                    <input type="text" class="keyword-input" placeholder="키워드 3">
+                    <input type="text" class="keyword-input" placeholder="키워드 4">
+                    <input type="text" class="keyword-input" placeholder="키워드 5">
+                    <input type="text" class="keyword-input" placeholder="키워드 6">
+                    <input type="text" class="keyword-input" placeholder="키워드 7">
+                    <input type="text" class="keyword-input" placeholder="키워드 8">
+                    <input type="text" class="keyword-input" placeholder="키워드 9">
+                </div>
+            </div>
+            
+            <!-- 애드센스 설정 -->
+            <div class="form-section">
+                <h2>📢 애드센스 설정 (선택)</h2>
+                <div class="form-group">
+                    <label>애드센스 Publisher ID</label>
+                    <input type="text" id="adClientId" placeholder="ca-pub-1234567890123456">
+                    <div class="help-text">예: ca-pub-1234567890123456</div>
+                </div>
+                <div class="form-group">
+                    <label>광고 슬롯 ID</label>
+                    <input type="text" id="adSlotId" placeholder="1234567890">
+                </div>
+            </div>
+            
+            <!-- 사업자 정보 -->
+            <div class="form-section">
+                <h2>🏢 사업자 정보</h2>
+                <div class="form-group">
+                    <label>사업자명/블로그명</label>
+                    <input type="text" id="businessName" placeholder="블로그(사업자)명">
+                </div>
+                <div class="form-group">
+                    <label>사업자 주소</label>
+                    <input type="text" id="businessAddress" placeholder="사업자 주소">
+                </div>
+                <div class="form-group">
+                    <label>사업자 번호</label>
+                    <input type="text" id="businessNumber" placeholder="123-45-67890">
+                </div>
+            </div>
+            
+            <button class="generate-btn" id="generateBtn" onclick="generateTheme()">
+                ✨ 테마 생성하기
+            </button>
+            
+            <div class="loading" id="loadingArea">
+                <div class="spinner"></div>
+                <p>테마를 생성하고 있습니다...<br>잠시만 기다려주세요.</p>
+            </div>
+            
+            <div class="download-area" id="downloadArea">
+                <h3>✅ 테마가 성공적으로 생성되었습니다!</h3>
+                <p>아래 버튼을 클릭하여 테마 파일을 다운로드하세요.</p>
+                <a href="#" class="download-btn" id="downloadBtn">📥 테마 다운로드 (ZIP)</a>
+                <div style="margin-top: 20px; font-size: 14px; color: #666;">
+                    <p><strong>설치 방법:</strong></p>
+                    <p>1. 워드프레스 관리자 페이지 접속</p>
+                    <p>2. 외모 → 테마 → 새로 추가 → 테마 업로드</p>
+                    <p>3. 다운로드한 ZIP 파일 선택 후 설치</p>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p><strong>제작자: 아로스</strong></p>
+            <p>워드프레스 지원금 테마 생성기 v1.0</p>
+            <p style="margin-top: 10px; font-size: 12px;">Copyrights © 2020 All Rights Reserved by (주)아백</p>
+        </footer>
+    </div>
+    
+    <script src="generator.js"></script>
 </body>
-</html>
+                            </html>

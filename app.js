@@ -1336,5 +1336,11 @@ function generateCustomJS() {
 
 // app.jsx의 WPThemeGenerator 컴포넌트 내부에 이 함수들을 추가하세요
 // 이미 Part 2에서 generateTheme 함수 내에서 호출되고 있습니다
-              
-ReactDOM.render(<WPThemeGenerator />, document.getElementById('root'));
+
+              // 기존 코드(지우기): ReactDOM.render(<WPThemeGenerator />, document.getElementById('root'));
+
+// 새 코드(React 18 방식):
+const container = document.getElementById('root');
+const root = ReactDOM.createRoot(container);
+root.render(<WPThemeGenerator />);
+

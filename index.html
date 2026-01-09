@@ -3,411 +3,265 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>워드프레스 지원금 테마 생성기</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 40px;
-            text-align: center;
-        }
-        
-        .header h1 {
-            font-size: 36px;
-            margin-bottom: 10px;
-        }
-        
-        .header p {
-            font-size: 16px;
-            opacity: 0.9;
-        }
-        
-        .content {
-            padding: 40px;
-        }
-        
-        .form-section {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 30px;
-            margin-bottom: 30px;
-        }
-        
-        .form-section h2 {
-            color: #667eea;
-            font-size: 24px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 8px;
-            color: #333;
-        }
-        
-        .form-group input,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px 16px;
-            border: 2px solid #e0e0e0;
-            border-radius: 8px;
-            font-size: 14px;
-            transition: border-color 0.3s;
-        }
-        
-        .form-group input:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-        
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
-            font-family: 'Courier New', monospace;
-        }
-        
-        .tab-inputs {
-            display: grid;
-            gap: 15px;
-        }
-        
-        .tab-input-row {
-            display: grid;
-            grid-template-columns: 2fr 3fr auto;
-            gap: 10px;
-            align-items: center;
-        }
-        
-        .keyword-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-        }
-        
-        .required {
-            color: #e74c3c;
-        }
-        
-        .help-text {
-            font-size: 12px;
-            color: #666;
-            margin-top: 5px;
-        }
-        
-        .radio-group {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        
-        .generate-btn {
-            width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
-        
-        .generate-btn:hover {
-            transform: translateY(-2px);
-        }
-        
-        .generate-btn:disabled {
-            background: #ccc;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .alert {
-            padding: 15px 20px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        
-        .alert-error {
-            background: #fee;
-            border-left: 4px solid #e74c3c;
-            color: #c0392b;
-        }
-        
-        .alert-success {
-            background: #e8f5e9;
-            border-left: 4px solid #4caf50;
-            color: #2e7d32;
-        }
-        
-        .loading {
-            display: none;
-            text-align: center;
-            padding: 40px;
-        }
-        
-        .loading.active {
-            display: block;
-        }
-        
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #667eea;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        .download-area {
-            display: none;
-            background: #e8f5e9;
-            padding: 30px;
-            border-radius: 12px;
-            text-align: center;
-        }
-        
-        .download-area.active {
-            display: block;
-        }
-        
-        .download-btn {
-            display: inline-block;
-            padding: 15px 40px;
-            background: #4caf50;
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 16px;
-            margin-top: 15px;
-        }
-        
-        footer {
-            background: #2c3e50;
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-        
-        .info-box {
-            background: #e3f2fd;
-            border-left: 4px solid #2196f3;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-        }
-        
-        .info-box h3 {
-            color: #1976d2;
-            margin-bottom: 10px;
-        }
-        
-        @media (max-width: 768px) {
-            .tab-input-row {
-                grid-template-columns: 1fr;
-            }
-            
-            .header h1 {
-                font-size: 28px;
-            }
-            
-            .content {
-                padding: 20px;
-            }
-        }
-    </style>
+    <title>워드프레스 테마 생성기 - 지원금 전용</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>🎨 워드프레스 지원금 테마 생성기</h1>
-            <p>AI 기반 워드프레스 테마를 1분 만에 생성하세요</p>
+        <!-- 헤더 -->
+        <header class="header">
+            <div class="header-content">
+                <div class="badge">최신 업데이트</div>
+                <h1>워드프레스 테마 생성기</h1>
+                <p class="subtitle">지원금 전용 테마를 AI로 자동 생성</p>
+            </div>
+        </header>
+
+        <!-- 에러 메시지 -->
+        <div id="errorContainer" class="error-container" style="display: none;">
+            <div class="error-content">
+                <span class="error-icon">⚠️</span>
+                <div id="errorMessage"></div>
+            </div>
         </div>
-        
-        <div class="content">
-            <div id="alertContainer"></div>
-            
-            <div class="info-box">
-                <h3>📌 사용 방법</h3>
-                <p>1. 아래 정보를 입력하세요<br>
-                2. "테마 생성하기" 버튼을 클릭하세요<br>
-                3. ZIP 파일을 다운로드하여 워드프레스에 업로드하세요</p>
+
+        <!-- 성공 메시지 -->
+        <div id="successContainer" class="success-container" style="display: none;">
+            <div class="success-content">
+                <span class="success-icon">✓</span>
+                <div id="successMessage"></div>
             </div>
-            
-            <!-- 기본 설정 -->
-            <div class="form-section">
-                <h2>⚙️ 기본 설정</h2>
-                
-                <div class="form-group">
-                    <label>테마 이름 <span class="required">*</span></label>
-                    <input type="text" id="themeName" placeholder="예: 지원금 테마" required>
-                    <div class="help-text">워드프레스에서 표시될 테마 이름</div>
-                </div>
-                
-                <div class="form-group">
-                    <label>테마 슬러그 <span class="required">*</span></label>
-                    <input type="text" id="themeSlug" placeholder="예: support-theme" required>
-                    <div class="help-text">영문, 숫자, 하이픈만 사용 (폴더명으로 사용됨)</div>
-                </div>
-                
-                <div class="form-group">
-                    <label>사이트 제목</label>
-                    <input type="text" id="siteTitle" placeholder="예: 지원금 스킨">
-                </div>
-                
-                <div class="form-group">
-                    <label>메인 URL</label>
-                    <input type="url" id="mainUrl" placeholder="https://example.com">
-                </div>
-            </div>
-            
-            <!-- 탭 메뉴 설정 -->
-            <div class="form-section">
-                <h2>📋 탭 메뉴 설정</h2>
-                <div class="tab-inputs">
-                    <div class="tab-input-row">
-                        <input type="text" id="tab1Name" placeholder="탭 1 이름">
-                        <input type="url" id="tab1Url" placeholder="탭 1 URL">
-                        <div class="radio-group">
-                            <input type="radio" name="activeTab" id="tab1Active" value="1" checked>
-                            <label for="tab1Active">Active</label>
-                        </div>
+        </div>
+
+        <!-- 메인 폼 -->
+        <div class="form-card">
+            <form id="themeForm">
+                <!-- 기본 정보 -->
+                <div class="form-section">
+                    <h2 class="section-title">🎨 테마 기본 정보</h2>
+                    
+                    <div class="form-group">
+                        <label for="themeName">테마 이름 <span class="required">*</span></label>
+                        <input type="text" id="themeName" name="themeName" placeholder="예: 지원금 테마" required>
                     </div>
-                    <div class="tab-input-row">
-                        <input type="text" id="tab2Name" placeholder="탭 2 이름">
-                        <input type="url" id="tab2Url" placeholder="탭 2 URL">
-                        <div class="radio-group">
-                            <input type="radio" name="activeTab" id="tab2Active" value="2">
-                            <label for="tab2Active">Active</label>
-                        </div>
+
+                    <div class="form-group">
+                        <label for="themeDescription">테마 설명</label>
+                        <input type="text" id="themeDescription" name="themeDescription" placeholder="예: 정부 지원금 정보 제공 테마">
                     </div>
-                    <div class="tab-input-row">
-                        <input type="text" id="tab3Name" placeholder="탭 3 이름">
-                        <input type="url" id="tab3Url" placeholder="탭 3 URL">
-                        <div class="radio-group">
-                            <input type="radio" name="activeTab" id="tab3Active" value="3">
-                            <label for="tab3Active">Active</label>
-                        </div>
+
+                    <div class="form-group">
+                        <label for="themeAuthor">제작자 이름</label>
+                        <input type="text" id="themeAuthor" name="themeAuthor" placeholder="예: 아로스">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="themeVersion">버전</label>
+                        <input type="text" id="themeVersion" name="themeVersion" value="1.0.0" placeholder="1.0.0">
                     </div>
                 </div>
-            </div>
-            
-            <!-- 키워드 입력 -->
-            <div class="form-section">
-                <h2>📝 키워드 입력 (최대 9개) <span class="required">*</span></h2>
-                <div class="keyword-grid" id="keywordGrid">
-                    <input type="text" class="keyword-input" placeholder="키워드 1">
-                    <input type="text" class="keyword-input" placeholder="키워드 2">
-                    <input type="text" class="keyword-input" placeholder="키워드 3">
-                    <input type="text" class="keyword-input" placeholder="키워드 4">
-                    <input type="text" class="keyword-input" placeholder="키워드 5">
-                    <input type="text" class="keyword-input" placeholder="키워드 6">
-                    <input type="text" class="keyword-input" placeholder="키워드 7">
-                    <input type="text" class="keyword-input" placeholder="키워드 8">
-                    <input type="text" class="keyword-input" placeholder="키워드 9">
+
+                <!-- 사이트 설정 -->
+                <div class="form-section">
+                    <h2 class="section-title">🏠 사이트 설정</h2>
+                    
+                    <div class="form-group">
+                        <label for="siteTitle">사이트 제목 <span class="required">*</span></label>
+                        <input type="text" id="siteTitle" name="siteTitle" placeholder="예: 지원금 스킨" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="siteUrl">사이트 URL</label>
+                        <input type="url" id="siteUrl" name="siteUrl" placeholder="https://example.com">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="logoUrl">로고 이미지 URL</label>
+                        <input type="url" id="logoUrl" name="logoUrl" placeholder="https://example.com/logo.png">
+                    </div>
                 </div>
-            </div>
-            
-            <!-- 애드센스 설정 -->
-            <div class="form-section">
-                <h2>📢 애드센스 설정 (선택)</h2>
-                <div class="form-group">
-                    <label>애드센스 Publisher ID</label>
-                    <input type="text" id="adClientId" placeholder="ca-pub-1234567890123456">
-                    <div class="help-text">예: ca-pub-1234567890123456</div>
+
+                <!-- 탭 메뉴 -->
+                <div class="form-section">
+                    <h2 class="section-title">📋 탭 메뉴 (최대 3개) <span class="required">*</span></h2>
+                    
+                    <div id="tabsContainer">
+                        <div class="tab-item" data-index="0">
+                            <div class="tab-header">
+                                <span class="tab-number">탭 1</span>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>탭 이름</label>
+                                    <input type="text" name="tabName0" placeholder="탭 1 이름">
+                                </div>
+                                <div class="form-group">
+                                    <label>링크 URL</label>
+                                    <input type="url" name="tabUrl0" placeholder="https://example.com">
+                                </div>
+                                <div class="form-group-inline">
+                                    <input type="radio" name="activeTab" value="0" checked>
+                                    <label>Active</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-item" data-index="1">
+                            <div class="tab-header">
+                                <span class="tab-number">탭 2</span>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>탭 이름</label>
+                                    <input type="text" name="tabName1" placeholder="탭 2 이름">
+                                </div>
+                                <div class="form-group">
+                                    <label>링크 URL</label>
+                                    <input type="url" name="tabUrl1" placeholder="https://example.com">
+                                </div>
+                                <div class="form-group-inline">
+                                    <input type="radio" name="activeTab" value="1">
+                                    <label>Active</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-item" data-index="2">
+                            <div class="tab-header">
+                                <span class="tab-number">탭 3</span>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>탭 이름</label>
+                                    <input type="text" name="tabName2" placeholder="탭 3 이름">
+                                </div>
+                                <div class="form-group">
+                                    <label>링크 URL</label>
+                                    <input type="url" name="tabUrl2" placeholder="https://example.com">
+                                </div>
+                                <div class="form-group-inline">
+                                    <input type="radio" name="activeTab" value="2">
+                                    <label>Active</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>광고 슬롯 ID</label>
-                    <input type="text" id="adSlotId" placeholder="1234567890">
+
+                <!-- 키워드 입력 -->
+                <div class="form-section keyword-section">
+                    <h2 class="section-title">📝 키워드 입력 (최대 9개) <span class="required">*</span></h2>
+                    <p class="helper-text">AI가 각 키워드에 대한 카드 내용을 자동 생성합니다</p>
+                    
+                    <div class="keyword-grid" id="keywordGrid">
+                        <input type="text" name="keyword0" placeholder="키워드 1" class="keyword-input">
+                        <input type="text" name="keyword1" placeholder="키워드 2" class="keyword-input">
+                        <input type="text" name="keyword2" placeholder="키워드 3" class="keyword-input">
+                        <input type="text" name="keyword3" placeholder="키워드 4" class="keyword-input">
+                        <input type="text" name="keyword4" placeholder="키워드 5" class="keyword-input">
+                        <input type="text" name="keyword5" placeholder="키워드 6" class="keyword-input">
+                        <input type="text" name="keyword6" placeholder="키워드 7" class="keyword-input">
+                        <input type="text" name="keyword7" placeholder="키워드 8" class="keyword-input">
+                        <input type="text" name="keyword8" placeholder="키워드 9" class="keyword-input">
+                    </div>
                 </div>
-            </div>
-            
-            <!-- 사업자 정보 -->
-            <div class="form-section">
-                <h2>🏢 사업자 정보</h2>
-                <div class="form-group">
-                    <label>사업자명/블로그명</label>
-                    <input type="text" id="businessName" placeholder="블로그(사업자)명">
+
+                <!-- 애드센스 광고 -->
+                <div class="form-section">
+                    <h2 class="section-title">📢 애드센스 광고 코드</h2>
+                    
+                    <div class="form-group">
+                        <label for="adsenseCode">광고 코드 (선택사항)</label>
+                        <textarea id="adsenseCode" name="adsenseCode" rows="4" placeholder="애드센스 광고 코드를 여기에 붙여넣으세요"></textarea>
+                        <p class="helper-text">※ 입력하지 않으면 기본 광고 코드가 사용됩니다</p>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>사업자 주소</label>
-                    <input type="text" id="businessAddress" placeholder="사업자 주소">
+
+                <!-- 푸터 정보 -->
+                <div class="form-section">
+                    <h2 class="section-title">📄 푸터 정보</h2>
+                    
+                    <div class="form-group">
+                        <label for="companyName">회사/블로그명</label>
+                        <input type="text" id="companyName" name="companyName" placeholder="예: 블로그(사업자)명">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="companyAddress">사업자 주소</label>
+                        <input type="text" id="companyAddress" name="companyAddress" placeholder="예: 서울시 강남구...">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="businessNumber">사업자 번호</label>
+                        <input type="text" id="businessNumber" name="businessNumber" placeholder="예: 123-45-67890">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>사업자 번호</label>
-                    <input type="text" id="businessNumber" placeholder="123-45-67890">
+
+                <!-- 생성 버튼 -->
+                <div class="form-actions">
+                    <button type="submit" class="btn-generate" id="generateBtn">
+                        <span class="btn-icon">✨</span>
+                        <span class="btn-text">테마 생성하기</span>
+                    </button>
                 </div>
-            </div>
-            
-            <button class="generate-btn" id="generateBtn" onclick="generateTheme()">
-                ✨ 테마 생성하기
-            </button>
-            
-            <div class="loading" id="loadingArea">
+            </form>
+        </div>
+
+        <!-- 생성 진행 상황 -->
+        <div id="progressContainer" class="progress-container" style="display: none;">
+            <div class="progress-content">
                 <div class="spinner"></div>
-                <p>테마를 생성하고 있습니다...<br>잠시만 기다려주세요.</p>
+                <h3>테마 생성 중...</h3>
+                <p id="progressText">AI가 콘텐츠를 생성하고 있습니다</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <p class="progress-percent" id="progressPercent">0%</p>
             </div>
-            
-            <div class="download-area" id="downloadArea">
-                <h3>✅ 테마가 성공적으로 생성되었습니다!</h3>
-                <p>아래 버튼을 클릭하여 테마 파일을 다운로드하세요.</p>
-                <a href="#" class="download-btn" id="downloadBtn">📥 테마 다운로드 (ZIP)</a>
-                <div style="margin-top: 20px; font-size: 14px; color: #666;">
-                    <p><strong>설치 방법:</strong></p>
-                    <p>1. 워드프레스 관리자 페이지 접속</p>
-                    <p>2. 외모 → 테마 → 새로 추가 → 테마 업로드</p>
-                    <p>3. 다운로드한 ZIP 파일 선택 후 설치</p>
+        </div>
+
+        <!-- 다운로드 섹션 -->
+        <div id="downloadSection" class="download-section" style="display: none;">
+            <div class="download-card">
+                <h2 class="download-title">🎉 테마 생성 완료!</h2>
+                <p class="download-description">각 파일을 개별 다운로드하거나 전체 ZIP으로 다운로드하세요</p>
+                
+                <div class="file-list" id="fileList"></div>
+                
+                <div class="download-actions">
+                    <button class="btn-download-all" id="downloadAllBtn">
+                        <span>📦 전체 ZIP 다운로드</span>
+                    </button>
+                </div>
+
+                <div class="install-guide">
+                    <h3>📖 설치 가이드</h3>
+                    <ol>
+                        <li>ZIP 파일을 다운로드합니다</li>
+                        <li>워드프레스 관리자 페이지 → 외모 → 테마로 이동</li>
+                        <li>"새로 추가" → "테마 업로드" 클릭</li>
+                        <li>다운로드한 ZIP 파일을 업로드</li>
+                        <li>"활성화" 버튼을 클릭하여 테마 적용</li>
+                    </ol>
                 </div>
             </div>
         </div>
-        
-        <footer>
-            <p><strong>제작자: 아로스</strong></p>
-            <p>워드프레스 지원금 테마 생성기 v1.0</p>
-            <p style="margin-top: 10px; font-size: 12px;">Copyrights © 2020 All Rights Reserved by (주)아백</p>
+
+        <!-- 푸터 -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-left">
+                    <div class="footer-brand">아백</div>
+                    <p class="footer-text">워드프레스 테마를 더 쉽게 만드세요</p>
+                </div>
+                <div class="footer-right">
+                    <p>제작자: 아로스</p>
+                    <p>© 2025 All Rights Reserved</p>
+                </div>
+            </div>
         </footer>
     </div>
-    
+
     <script src="generator.js"></script>
 </body>
-                            </html>
+    </html>

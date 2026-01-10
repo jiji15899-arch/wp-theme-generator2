@@ -1,16 +1,17 @@
-/* * 통합된 테마 생성기 템플릿 파일 
- * (style.css, header.php, footer.php, index.php, functions.php, custom.js)
+/* theme-generators.js 
+ * 통합된 테마 생성기 템플릿 파일 
+ * AdSense Edition
  */
 
-// 1. style.css 생성
+// 1. style.css 생성 (광고 CSS 추가)
 function generateStyleCSS(themeName, primaryColor) {
     const slug = themeName.toLowerCase().replace(/\s+/g, '-');
     return `/*
 Theme Name: ${themeName}
 Theme URI: https://example.com
 Author: AI Theme Generator
-Description: ${themeName} - AI generated wordpress theme
-Version: 1.0.0
+Description: ${themeName} - AdSense Optimized Theme
+Version: 1.1.0
 License: GNU General Public License v2 or later
 Text Domain: ${slug}
 */
@@ -46,9 +47,23 @@ img { max-width: 100%; height: auto; }
 .mobile-menu-toggle { display: none; font-size: 24px; background: none; border: none; cursor: pointer; }
 
 /* 인트로 & 히어로 */
-.intro-section { text-align: center; margin-bottom: 50px; }
+.intro-section { text-align: center; margin-bottom: 30px; }
 .intro-badge { background: var(--primary-light); color: var(--primary-color); padding: 5px 15px; border-radius: 20px; font-size: 14px; font-weight: 700; display: inline-block; margin-bottom: 15px; }
 .intro-title { font-size: 32px; font-weight: 800; margin-bottom: 10px; }
+
+/* ===== 광고 스타일 ===== */
+.ad-fixed-top { margin: 20px 0 40px 0; text-align: center; }
+.ad-card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.04);
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
 
 /* 카드 그리드 */
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px; margin-bottom: 60px; }
@@ -75,18 +90,36 @@ img { max-width: 100%; height: auto; }
     .site-navigation.active ul { display: flex; }
     .mobile-menu-toggle { display: block; }
     .intro-title { font-size: 26px; }
+    
+    /* 모바일 광고 스타일 오버라이드 */
+    .ad-card {
+        background: transparent;
+        border-radius: 0;
+        box-shadow: none;
+        border: none;
+        padding: 0;
+        margin: 10px 0;
+    }
 }`;
 }
 
-// 2. header.php 생성
-function generateHeaderPHP(siteTitle, menus) {
+// 2. header.php 생성 (애드센스 헤더 스크립트 추가)
+function generateHeaderPHP(siteTitle, menus, adConfig) {
     const menuItems = menus.map(m => `                    <li><a href="${m.link}">${m.name}</a></li>`).join('\n');
+    
+    // 애드센스 헤더 스크립트 생성
+    let adsenseScript = '';
+    if (adConfig && adConfig.pubId) {
+        adsenseScript = `<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adConfig.pubId}" crossorigin="anonymous"></script>`;
+    }
+
     return `<!DOCTYPE html>
 <html <?php language_attributes(); ?>>
 <head>
     <meta charset="<?php bloginfo('charset'); ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <?php wp_head(); ?>
+    ${adsenseScript}
 </head>
 <body <?php body_class(); ?>>
 <?php wp_body_open(); ?>
@@ -124,12 +157,35 @@ function generateFooterPHP(companyName, businessNumber) {
 </html>`;
 }
 
-// 4. index.php 생성 (AI 데이터 연동 부분)
-function generateIndexPHP(siteTitle, cardData, mainUrl) {
-    // 카드 데이터가 없을 경우를 대비한 안전 장치
+// 4. index.php 생성 (광고 배치 로직 포함)
+function generateIndexPHP(siteTitle, cardData, mainUrl, adConfig) {
+    // 카드 데이터 안전 장치
     const safeCardData = Array.isArray(cardData) ? cardData : [];
     
-    const cardsHTML = safeCardData.map(card => `
+    // 광고 HTML 생성 헬퍼 함수 (336x280)
+    const getGridAdHTML = (pubId, slotId) => {
+        return `
+        <div class="ad-card">
+            <div style="display:flex; justify-content:center; width:100%;">
+                <ins class="adsbygoogle"
+                     style="display:inline-block;width:336px;height:280px"
+                     data-ad-client="${pubId}"
+                     data-ad-slot="${slotId}"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
+        </div>`;
+    };
+
+    let contentHTML = '';
+    
+    // 카드 데이터 순회하며 광고 삽입
+    safeCardData.forEach((card, idx) => {
+        // 규칙: idx 0, 3, 6 앞에 광고 삽입
+        if (adConfig.pubId && adConfig.slotId && [0, 3, 6].includes(idx)) {
+            contentHTML += getGridAdHTML(adConfig.pubId, adConfig.slotId) + '\n';
+        }
+
+        contentHTML += `
         <article class="info-card">
             <a href="${mainUrl}">
                 <div class="card-header">
@@ -148,7 +204,11 @@ function generateIndexPHP(siteTitle, cardData, mainUrl) {
                 </div>
             </a>
         </article>
-    `).join('\n');
+        `;
+    });
+
+    // 상단 고정 광고 (원본 코드 그대로)
+    const topAdHTML = adConfig.rawCode ? `<div class="ad-fixed-top">${adConfig.rawCode}</div>` : '';
 
     return `<?php get_header(); ?>
 
@@ -159,8 +219,10 @@ function generateIndexPHP(siteTitle, cardData, mainUrl) {
         <p>놓치면 안되는 혜택 정보를 한눈에 확인하세요.</p>
     </section>
 
+    ${topAdHTML}
+
     <section class="card-grid">
-${cardsHTML}
+${contentHTML}
     </section>
 
     <?php if (have_posts()) : ?>

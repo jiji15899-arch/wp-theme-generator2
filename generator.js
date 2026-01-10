@@ -3,30 +3,32 @@
 // 날짜 표시
 document.getElementById('currentDate').textContent = new Date().toLocaleDateString('ko-KR');
 
-// 1. 유틸리티 함수: 딜레이 주기 (생성하는 척 연출)
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
-// 2. 가상 데이터 생성기 (CORS 오류 해결을 위한 핵심 솔루션)
-// 실제 서버 없이도 키워드에 맞춰 그럴듯한 데이터를 만들어냅니다.
+// 2. 가상 데이터 생성기 (키워드 9개까지 대응)
 function generateMockData(keywords) {
-    return keywords.map(keyword => {
-        // 키워드 분석을 통해 그럴듯한 숫자와 내용 생성
+    return keywords.map((keyword, index) => {
         let amount = "월 30만원";
         let sub = "현금 지급";
         let target = "대한민국 국민 누구나";
         
+        // 키워드에 따른 랜덤성 부여 (중복 느낌 방지)
         if (keyword.includes("대출") || keyword.includes("자금")) {
-            amount = "최대 5,000만원";
-            sub = "연 2.5% 저금리";
+            amount = `최대 ${3000 + (index * 500)}만원`;
+            sub = `연 ${2.0 + (index * 0.5)}% 저금리`;
             target = "소상공인 및 자영업자";
         } else if (keyword.includes("장려") || keyword.includes("급여")) {
-            amount = "최대 330만원";
+            amount = `최대 ${100 + (index * 30)}만원`;
             sub = "정기 환급형";
             target = "소득 요건 충족 가구";
         } else if (keyword.includes("청년") || keyword.includes("도약")) {
             amount = "5,000만원 + @";
             sub = "정부 기여금 포함";
             target = "만 19세 ~ 34세 청년";
+        } else if (keyword.includes("바우처") || keyword.includes("카드")) {
+            amount = `연 ${50 + (index * 10)}만원`;
+            sub = "사용처 자동 차감";
+            target = "해당 조건 대상자";
         } else if (keyword.includes("환급")) {
             amount = "평균 135만원";
             sub = "미수령액 일괄 지급";
@@ -79,12 +81,40 @@ function createDownloadButtons(files) {
         
         btn.onclick = () => {
             downloadFile(fileName, content);
-            // 버튼 깜빡임 효과
             btn.classList.add('bg-green-100', 'border-green-300');
             setTimeout(() => btn.classList.remove('bg-green-100', 'border-green-300'), 500);
         };
         container.appendChild(btn);
     });
+}
+
+// ★ 애드센스 코드 파서 함수
+function parseAdSenseCode(rawCode) {
+    if (!rawCode || rawCode.trim() === '') {
+        return { rawCode: '', pubId: '', slotId: '' };
+    }
+
+    let pubId = '';
+    let slotId = '';
+
+    // data-ad-client 추출 (따옴표 종류 무관)
+    const clientMatch = rawCode.match(/data-ad-client=["']([^"']+)["']/);
+    if (clientMatch) pubId = clientMatch[1];
+    else {
+        // script src에서 추출 시도
+        const srcMatch = rawCode.match(/client=(ca-pub-[^"&]+)/);
+        if (srcMatch) pubId = srcMatch[1];
+    }
+
+    // data-ad-slot 추출
+    const slotMatch = rawCode.match(/data-ad-slot=["']([^"']+)["']/);
+    if (slotMatch) slotId = slotMatch[1];
+
+    return {
+        rawCode: rawCode,
+        pubId: pubId,
+        slotId: slotId
+    };
 }
 
 // 5. 메인 생성 로직
@@ -94,11 +124,9 @@ async function generateTheme() {
     const resultBox = document.getElementById('resultBox');
     const errorBox = document.getElementById('errorBox');
     
-    // 초기화
     errorBox.classList.add('hidden');
     resultBox.classList.add('hidden');
 
-    // 입력값 검증
     const themeName = document.getElementById('themeName').value.trim();
     const keywords = Array.from(document.querySelectorAll('.keyword'))
         .map(el => el.value.trim())
@@ -115,18 +143,20 @@ async function generateTheme() {
         return;
     }
 
-    // UI 상태 변경
     generateBtn.disabled = true;
     generateBtn.innerHTML = "⏳ 생성 중...";
     loadingBox.classList.remove('hidden');
 
     try {
-        // 데이터 수집
         const siteTitle = document.getElementById('siteTitle').value.trim() || themeName;
         const primaryColor = document.getElementById('primaryColor').value;
         const mainUrl = document.getElementById('mainUrl').value.trim() || '#';
         const companyName = document.getElementById('companyName').value.trim() || themeName;
         const businessNumber = document.getElementById('businessNumber').value.trim() || '000-00-00000';
+        
+        // 애드센스 코드 처리
+        const rawAdCode = document.getElementById('adsenseCode').value;
+        const adConfig = parseAdSenseCode(rawAdCode);
 
         // 메뉴 데이터
         const menuNames = Array.from(document.querySelectorAll('.menu-name')).map(el => el.value.trim());
@@ -136,28 +166,22 @@ async function generateTheme() {
             link: menuLinks[i] || '#'
         }));
 
-        // [중요] 가상 AI 생성 단계
-        // 실제 API 호출 대신 로컬 로직을 사용하여 즉시 결과를 만듭니다.
-        // 이를 통해 CORS 에러와 API 키 문제를 100% 회피합니다.
-        await delay(1500); // 사용자가 '생성 중'임을 느끼도록 1.5초 대기
+        await delay(1500); 
         const cardData = generateMockData(keywords);
 
-        // 파일 내용 생성 (theme-generators.js의 함수들 호출)
         const files = {
             'style.css': generateStyleCSS(themeName, primaryColor),
-            'index.php': generateIndexPHP(siteTitle, cardData, mainUrl),
-            'header.php': generateHeaderPHP(siteTitle, menus),
+            'index.php': generateIndexPHP(siteTitle, cardData, mainUrl, adConfig),
+            'header.php': generateHeaderPHP(siteTitle, menus, adConfig),
             'footer.php': generateFooterPHP(companyName, businessNumber),
             'functions.php': generateFunctionsPHP(),
             'custom.js': generateCustomJS()
         };
 
-        // 결과 표시
         createDownloadButtons(files);
         loadingBox.classList.add('hidden');
         resultBox.classList.remove('hidden');
 
-        // 스크롤 이동
         resultBox.scrollIntoView({ behavior: 'smooth' });
 
     } catch (err) {
@@ -170,5 +194,4 @@ async function generateTheme() {
     }
 }
 
-// 이벤트 리스너 등록
 document.getElementById('generateBtn').addEventListener('click', generateTheme);
